@@ -1,8 +1,0 @@
-{
-  "availability-zones:account=012411212528:region=eu-west-1": [
-    "eu-west-1a",
-    "eu-west-1b",
-    "eu-west-1c"
-  ],
-  "ami:account=012411212528:filters.image-type.0=machine:filters.name.0=emqx429:filters.state.0=available:region=eu-west-1": "ami-0abda0ec1e1bdedc9"
-}
