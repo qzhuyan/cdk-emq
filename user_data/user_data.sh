@@ -13,6 +13,14 @@ echo 'net.ipv4.ip_local_port_range="1025 65534"' >>  /etc/sysctl.d/99-sysctl.con
 sysctl -w fs.nr_open=8000000
 sysctl -w net.ipv4.tcp_tw_reuse=1
 
+apt update
+apt install -y make prometheus wget gnupg2 git build-essential curl cmake debhelper
+#snap install cmake --classic
+wget -O - https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add -
+echo "deb https://packages.erlang-solutions.com/ubuntu focal contrib" | tee /etc/apt/sources.list.d/els.list
+apt update
+apt install -y esl-erlang=1:23.3.4.5-1
+
 ## install node exporter
 useradd --no-create-home --shell /bin/false node_exporter
 wget https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
@@ -47,13 +55,14 @@ systemctl start node_exporter
 # Install emqx
 # A)  install official version
 wget https://www.emqx.io/downloads/broker/v4.3.0/emqx-ubuntu20.04-4.3.0-amd64.deb
-sudo apt install ./emqx-ubuntu20.04-4.3.0-amd64.deb
+#sudo apt install ./emqx-ubuntu20.04-4.3.0-amd64.deb
 
 # B)  install from S3
 sudo apt update
 sudo apt install awscli -y
 aws s3 cp s3://team-private-hotpot/emqx-ubuntu20.04-5.0-alpha.5-ffded5ab-amd64.deb ./emqx.deb || echo "failed to fetch from s3"
-sudo apt install ./emqx.deb
+
+#sudo apt install ./emqx.deb
 
 sudo bash -c 'echo "## ========= cloud user_data start  ===========##" >> /etc/emqx/emqx.conf'
 sudo bash -c 'echo "node.name = emqx@`hostname -f`" >> /etc/emqx/emqx.conf'
@@ -67,4 +76,11 @@ EOF
 
 echo "prometheus.push.gateway.server = http://lb.int.emqx:9091" >> /etc/emqx/plugins/emqx_prometheus.conf
 echo "{emqx_prometheus, true}." >> /var/lib/emqx/loaded_plugins
+
+cd /root/
+git clone https://github.com/emqx/emqx
+cd emqx
+HOME=/root make emqx-pkg
+dpkg -i ./_packages/emqx/*.deb
+
 sudo emqx start

@@ -10,7 +10,12 @@ echo "fs.nr_open=8000000" >>  /etc/sysctl.d/99-sysctl.conf
 echo 'net.ipv4.ip_local_port_range="1025 65534"' >>  /etc/sysctl.d/99-sysctl.conf
 
 apt update
-apt install -y erlang make prometheus
+apt install -y make prometheus wget gnupg2 git build-essential curl cmake debhelper
+#snap install cmake --classic
+wget -O - https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add -
+echo "deb https://packages.erlang-solutions.com/ubuntu focal contrib" | tee /etc/apt/sources.list.d/els.list
+apt update
+apt install -y esl-erlang=1:23.3.4.5-1
 
 ## install node exporter
 useradd --no-create-home --shell /bin/false node_exporter
@@ -43,9 +48,7 @@ EOF
 systemctl enable node_exporter
 systemctl start node_exporter
 
-
 cd /root/
 git clone https://github.com/emqx/emqtt_bench
 cd emqtt_bench
-export BUILD_WITHOUT_QUIC
-make
+HOME=/root DIAGNOSTIC=1 make
