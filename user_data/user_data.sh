@@ -64,23 +64,50 @@ aws s3 cp s3://team-private-hotpot/emqx-ubuntu20.04-5.0-alpha.5-ffded5ab-amd64.d
 
 #sudo apt install ./emqx.deb
 
-sudo bash -c 'echo "## ========= cloud user_data start  ===========##" >> /etc/emqx/emqx.conf'
-sudo bash -c 'echo "node.name = emqx@`hostname -f`" >> /etc/emqx/emqx.conf'
-cat <<EOF >> /etc/emqx/emqx.conf
-cluster.discovery = etcd
-cluster.etcd.server = http://etcd0.int.emqx:2379
-listener.tcp.external.max_conn_rate = 5000
-listener.tcp.external.acceptors = 128
-## ========= cloud user_data end  ===========##
-EOF
-
-echo "prometheus.push.gateway.server = http://lb.int.emqx:9091" >> /etc/emqx/plugins/emqx_prometheus.conf
-echo "{emqx_prometheus, true}." >> /var/lib/emqx/loaded_plugins
 
 cd /root/
 git clone https://github.com/emqx/emqx
 cd emqx
 HOME=/root make emqx-pkg
 dpkg -i ./_packages/emqx/*.deb
+
+nodename="emqx@`hostname -f`"
+cat <<EOF >> /etc/emqx/emqx.conf
+node {
+ name: $nodename
+}
+
+cluster {
+ discovery_strategy = etcd
+
+ etcd {
+   server: http://etcd0.int.emqx:2379
+   ssl.enable: false
+ }
+}
+
+listeners.tcp.default {
+ acceptors: 128
+}
+
+rate_limit {
+ max_conn_rate = infinity
+ conn_messages_in = infinity
+ conn_bytes_in = infinity
+}
+
+prometheus {
+    push_gateway_server = "http://lb.int.emqx:9091"
+    interval = "15s"
+    enable = true
+}
+
+gateway.exproto {
+server {
+  bind = 9101
+ }
+}
+
+EOF
 
 sudo emqx start
