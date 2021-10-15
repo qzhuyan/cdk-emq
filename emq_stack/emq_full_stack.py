@@ -105,6 +105,8 @@ class EmqFullStack(core.Stack):
         sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(18083), 'WEB UI')
         sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(4369), 'EMQX dist port 1')
         sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(4370), 'EMQX dist port 2')
+        sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(5369), 'EMQX gen_rpc dist port 1')
+        sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(5370), 'EMQX gen_rpc dist port 2')
         sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(8081), 'EMQX dashboard')
         sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(2379), 'etcd client port')
         sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(2380), 'etcd peer port')
@@ -407,8 +409,9 @@ EOF
 
             self.emqx_vms.append(vm)
 
-            r53.ARecord(self, id = name + '.int.emqx',
-                        record_name = name + '.int.emqx',
+            dnsname = name + '.int.emqx'
+            r53.ARecord(self, id = dnsname,
+                        record_name = dnsname,
                         zone = zone,
                         target = r53.RecordTarget([vm.instance_private_ip])
             )
