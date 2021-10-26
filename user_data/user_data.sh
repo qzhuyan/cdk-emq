@@ -13,6 +13,14 @@ echo 'net.ipv4.ip_local_port_range="1025 65534"' >>  /etc/sysctl.d/99-sysctl.con
 sysctl -w fs.nr_open=8000000
 sysctl -w net.ipv4.tcp_tw_reuse=1
 
+if [ -b /dev/nvme1n1 ]; then
+echo "Find extra data vol, format and mount..."
+mkfs.ext4 -L emqx_data /dev/nvme1n1
+mkdir -p /var/lib/emqx/
+mount -L  emqx_data /var/lib/emqx/
+fi
+
+
 apt update
 apt install -y make prometheus wget gnupg2 git build-essential curl cmake debhelper
 #snap install cmake --classic
@@ -81,7 +89,7 @@ cluster {
  discovery_strategy = etcd
 
  etcd {
-   server: http://etcd0.int.emqx:2379
+   server: "http://etcd0.int.emqx:2379"
    ssl.enable: false
  }
 }

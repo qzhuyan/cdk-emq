@@ -21,7 +21,11 @@ from base64 import b64encode
 #
 emqx_ins_type = 't3a.small'
 #emqx_ins_type = 'm5.2xlarge'
+# memory optimized
+#emqx_ins_type = 'r5a.2xlarge'
 numEmqx=2
+# extra vol for emqx data dir
+emqx_ebs_vol_size=8
 # test
 loadgen_ins_type = 't3a.micro'
 # Prod
@@ -397,8 +401,10 @@ EOF
         self.emqx_vms = []
         for n in range(0, N):
             name = "emqx-%d" % n
+            rootblockdev = ec2.BlockDevice(device_name = '/dev/xvda', volume = ec2.BlockDeviceVolume.ebs(emqx_ebs_vol_size))
             vm = ec2.Instance(self, id = name,
                               instance_type = ec2.InstanceType(instance_type_identifier=emqx_ins_type),
+                              block_devices = [rootblockdev],
                               machine_image = linux_ami,
                               user_data = ec2.UserData.custom(user_data),
                               security_group = sg,
